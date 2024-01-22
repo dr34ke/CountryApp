@@ -5,7 +5,9 @@ data class Country(
     val capital : List<String>,
     val currencies: Map<String, Currency>,
     val flags:  Map<String, String>,
-    val population: Int
+    val population: Int,
+    val cca2: String,
+    val region: String
 )
 
 data class Name(

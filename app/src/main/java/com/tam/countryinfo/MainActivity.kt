@@ -1,5 +1,6 @@
 package com.tam.countryinfo
 
+import android.content.Intent
 import androidx.compose.runtime.getValue
 import android.os.Bundle
 import android.widget.ListView
@@ -9,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.tam.countryinfo.Models.Country
 
 class MainActivity : ComponentActivity() {
@@ -59,15 +63,20 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color.LightGray
                 ) {
-                    Country(viewModel)
+                    Country(viewModel, onClick = { code -> navigateToDetailsActivity(code) })
                 }
             }
         }
     }
+    fun navigateToDetailsActivity(code: String) {
+        val detailsIntent = Intent(this, DetailActivity::class.java)
+        detailsIntent.putExtra("COUNTRY_CODE", code)
+        startActivity(detailsIntent)
+    }
 }
 
 @Composable
-fun Country(viewModel: MainViewModel, modifier: Modifier=Modifier) {
+fun Country(viewModel: MainViewModel, onClick: (String) -> Unit, modifier: Modifier=Modifier) {
     val uiState by viewModel.immutableCountriesData.observeAsState(MainViewModel.UiState())
 
     when {
@@ -80,7 +89,7 @@ fun Country(viewModel: MainViewModel, modifier: Modifier=Modifier) {
         }
 
         uiState.data != null -> {
-            uiState.data?.let { ListView(countries = it) }
+            uiState.data?.let { ListView(countries = it, onClick = { id -> onClick.invoke(id) })}
         }
     }
 }
@@ -131,14 +140,14 @@ fun Loader() {
 }
 
 @Composable
-fun ListView(countries: List<Country>) {
+fun ListView(countries: List<Country>, onClick: (String) -> Unit) {
     LazyColumn {
         if (countries.isNotEmpty()) {
             countries.forEachIndexed { index, country ->
                 val _population = String.format("%,d", country.population).replace(",", " ")
                 item {
 
-                    Row {
+                    Row (modifier = Modifier.clickable { onClick.invoke(country.cca2) }){
                         Box(
                             modifier = Modifier
                                 .width(100.dp)
@@ -158,7 +167,7 @@ fun ListView(countries: List<Country>) {
                             )
                             Row {
                                 Text(
-                                    text = "${country.name.common} - ${country.capital}",
+                                    text = "${country.name.common} - ${country.capital.first()}",
                                     fontSize = 20.sp
                                 )
                             }
